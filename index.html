@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" type="../image/x-icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMtLCoyIxzfkKNeTU18zhhq7pZOR6mBQ2fDA&usqp=CAU">
+
+  <title>Ranking dos Projetos FJU</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    @font-face {
+      font-family: 'Cunia';
+      src: url('Cunia_5d3334e3b1358377b2f8210775c33a05.otf') format('opentype');
+    }
+
+    h1 {
+      font-family: 'Cunia', sans-serif;
+    }
+
+    .dark {
+      background-color: #1a202c;
+      color: #e2e8f0;
+    }
+
+    .dark .bg-white {
+      background-color: #2d3748;
+    }
+
+    .dark .text-gray-600 {
+      color: #a0aec0;
+    }
+
+    .progress-bar {
+      transition: width 0.5s ease-in-out;
+    }
+
+    #preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    #preloader.hidden {
+      display: none;
+    }
+
+    #spinner {
+      width: 60px;
+      height: 60px;
+      border: 8px solid #3b82f6;
+      border-top: 8px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .logo {
+      filter: invert(0);
+    }
+
+    .dark .logo {
+      filter: brightness(0) invert(1);
+    }
+
+    #darkModeToggle {
+      cursor: pointer;
+    }
+
+    #darkModeToggle i {
+      /* Target Font Awesome icon */
+      transition: filter 0.3s ease;
+    }
+
+    .dark #darkModeToggle i {
+      filter: invert(1);
+    }
+
+    a {
+      padding-left: 20px;
+      padding-right: 20px;
+      border-radius: 15px;
+      border-bottom: 2px solid #518FF391;
+    }
+
+    .cor-texto {
+      color: #518FF391;
+    }
+  </style>
+  <!-- ... other head content ... -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+  <!-- ... rest of your head content ... -->
+</head>
+
+<body class="bg-gray-100">
+  <div id="preloader">
+    <div id="spinner"></div>
+  </div>
+
+  <div class="container mx-auto px-4 py-8">
+    <button id="darkModeToggle" class="fixed top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700">
+      <i id="themeIcon" class="fas fa-sun text-xl"></i>
+      <i id="moonIcon" class="fas fa-moon text-xl" style="display:none;"></i>
+    </button>
+
+    <div class="flex justify-center mb-6">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Logo_For%C3%A7a_Jovem_Universal.png/1200px-Logo_For%C3%A7a_Jovem_Universal.png" alt="Logo" class="w-48 logo">
+    </div>
+
+    <h1 class="text-3xl font-bold text-center mb-6">Projetos mais escolhidos</h1>
+
+    <div id="totalParticipantes" class="text-center mb-4"></div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-blue-600 text-white">
+            <th class="p-2 text-left">Projetos</th>
+            <th class="p-2 text-center">(%)</th>
+          </tr>
+        </thead>
+        <tbody id="rankingTable"></tbody>
+      </table>
+    </div>
+
+    <div class="text-center mt-6">
+      <h4 class="vis-center mt-6 cor-texto">Acesse e preencha o formulário abaixo. Sua participação é importante!</h4>
+      <a href="../Formulário.html" class="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800">
+        <span>&#128073 Formulário</span>
+      </a>
+    </div>
+
+    <div class="mt-12">
+      <h2 class="text-2xl font-bold text-center mb-6">Dashboard</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold mb-2">Estatísticas Gerais</h3>
+          <canvas id="estatisticasChart"></canvas>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold mb-2">Participantes por Projeto</h3>
+          <canvas id="participantesChart"></canvas>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold mb-2">Evolução da Participação</h3>
+          <canvas id="evolucaoChart"></canvas>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold mb-2">Nomes dos Participantes por Projeto</h3>
+          <canvas id="nomesParticipantesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <footer class="text-center mt-8 text-sm text-gray-600">
+      <p>⚠️ Nota: o sistema não é oficial e é apenas para demonstração.</p>
+    </footer>
+  </div>
+
+  <div id="projectModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full">
+      <div class="flex items-center space-x-4 mb-4">
+        <img id="modalProjectImage" src="" alt="" class="w-15 h-16 rounded-full">
+        <h2 id="modalProjectName" class="text-xl font-bold"></h2>
+      </div>
+      <p id="modalProjectDescription" class="mb-4"></p>
+      <h3 class="font-bold mb-2">Membros do Projeto</h3>
+      <ul id="modalPeopleList" class="list-disc pl-5"></ul>
+      <button id="closeModal" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Fechar</button>
+    </div>
+  </div>
+
+  <script>
+    const TOTAL_PARTICIPANTES = 21;
+
+    const projetoDescricoes = {
+      "ESPORTES": "Projeto focado em atividades esportivas e promoção de saúde através do esporte.",
+      "MÍDIA": "Responsável pela comunicação e divulgação das atividades da Força Jovem Universal.",
+      "HELP": "Projeto de assistência social e apoio à comunidade.",
+      "UNIFORÇA": "Projeto de vigilância e proteção espiritual da juventude.",
+      "UNIVERSITÁRIOS": "Voltado para o desenvolvimento e apoio aos jovens universitários.",
+      "ASSISTENTES": "Equipe de suporte e organização dos eventos e atividades.",
+      "ATALAIA": "Coordena as ações conjuntas entre os diferentes projetos da Força Jovem.",
+      "CULTURA": "Promove atividades culturais e artísticas entre os jovens.",
+      "ARCANJOS": "Grupo de elite focado em missões especiais e liderança juvenil."
+    };
+
+    const pessoasPorProjeto = {
+      "ESPORTES": [],
+      "MÍDIA": [],
+      "HELP": [],
+      "UNIFORÇA": ["Maria Hozana Guilherme matias"],
+      "UNIVERSITÁRIOS": ["Vitor Evangelistas"],
+      "ASSISTENTES": [],
+      "ATALAIA": [],
+      "CULTURA": ["Rafael Jatobá 2"],
+      "ARCANJOS": []
+    };
+
+    let projects = [
+      { nome: "ESPORTES", pontos: 0, imagem: "https://forcajovemuniversal.com/wp-content/uploads/2021/02/patch_esportes.png" },
+      { nome: "MÍDIA", pontos: 0, imagem: "https://forcajovemuniversal.com/wp-content/uploads/2021/02/patch_midia.png" },
+      { nome: "HELP", pontos: 0, imagem: "https://forcajovemuniversal.com/wp-content/uploads/2021/02/patch_help.png" },
+      { nome: "UNIFORÇA", pontos: 1, imagem: "https://forcajovemuniversal.com/wp-content/uploads/2021/02/patch_uniforca.png" },
+      { nome: "UNIVERSITÁRIOS", pontos: 1, imagem: "https://forcajovemuniversal.com/wp-content/uploads/2021/02/patch_universitarios.png" },
+      { nome: "ASSISTENTES", pontos: 0, imagem: "https://forcajovemuniversal.com/wp-content/uploads/2021/02/patch_assistentes.png" },
+      { nome: "ATALAIA", pontos: 0, imagem: "https://forcajovemuniversal.com/wp-content/uploads/2021/02/patch_atalaia.png" },
+      { nome: "CULTURA", pontos: 1, imagem: "https://forcajovemuniversal.com/wp-content/uploads/2021/02/patch_cultura.png" },
+      { nome: "ARCANJOS", pontos: 0, imagem: "https://forcajovemuniversal.com/wp-content/uploads/2021/02/patch_arcanjos.png" }
+    ];
+
+    function updateRanking() {
+      const totalPontos = projects.reduce((acc, project) => acc + project.pontos, 0);
+      const participantesConcluidos = Math.min(totalPontos, TOTAL_PARTICIPANTES);
+
+      projects = projects.map(project => ({
+        ...project,
+        porcentagem: totalPontos > 0 ? ((project.pontos / totalPontos) * 100).toFixed(2) : '0'
+      })).sort((a, b) => b.pontos - a.pontos || a.nome.localeCompare(b.nome));
+
+      const rankingTable = document.getElementById("rankingTable");
+      rankingTable.innerHTML = '';
+
+      projects.forEach((project, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+                    <td class="p-2">
+                        <div class="flex items-center space-x-2 cursor-pointer">
+                            <span class="font-bold">${index + 1}°</span>
+                            <img src="${project.imagem}" alt="${project.nome}" class="w-15 h-10 rounded-full">
+                            <span>${project.nome}</span>
+                        </div>
+                    </td>
+                    <td class="p-2">
+                        <div class="relative pt-1">
+                            <div class="overflow-hidden h-2 text-xs flex rounded bg-blue-200">
+                                <div style="width: ${project.porcentagem}%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 progress-bar"></div>
+                            </div>
+                            <div class="text-right text-sm mt-1">${project.porcentagem}%</div>
+                        </div>
+                    </td>
+                `;
+        row.querySelector('.flex').addEventListener('click', () => showModal(project));
+        rankingTable.appendChild(row);
+      });
+
+      const totalElement = document.getElementById("totalParticipantes");
+      if (participantesConcluidos >= TOTAL_PARTICIPANTES) {
+        totalElement.textContent = `${participantesConcluidos} de ${TOTAL_PARTICIPANTES}: Encerrado`;
+        totalElement.classList.add('text-red-500', 'font-bold');
+      } else {
+        totalElement.textContent = `${participantesConcluidos} de ${TOTAL_PARTICIPANTES} participantes já concluídos`;
+        totalElement.classList.remove('text-red-500', 'font-bold');
+      }
+
+      updateDashboard(participantesConcluidos);
+    }
+
+    function updateDashboard(participantesConcluidos) {
+      const projetosAtivos = projects.filter(p => p.pontos > 0).length;
+      const mediaParticipantes = projetosAtivos > 0 ? (participantesConcluidos / projetosAtivos).toFixed(2) : '0';
+
+      updateEstatisticasChart(participantesConcluidos, projetosAtivos, parseFloat(mediaParticipantes));
+      updateParticipantesChart();
+      updateEvolucaoChart(participantesConcluidos);
+      updateNomesParticipantesChart();
+    }
+
+    function updateEstatisticasChart(totalParticipantes, projetosAtivos, mediaParticipantes) {
+      const ctx = document.getElementById('estatisticasChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Total de Participantes', 'Projetos Ativos', 'Média de Participantes por Projeto'],
+          datasets: [{
+            data: [totalParticipantes, projetosAtivos, mediaParticipantes],
+            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+            },
+            title: {
+              display: true,
+              text: 'Estatísticas Gerais'
+            }
+          }
+        }
+      });
+    }
+
+    function updateParticipantesChart() {
+      const ctx = document.getElementById('participantesChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: projects.map(p => p.nome),
+          datasets: [{
+            label: 'Participantes',
+            data: projects.map(p => p.pontos),
+            backgroundColor: 'rgba(54, 162, 235, 0.6)'
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    function updateEvolucaoChart(totalParticipantes) {
+      const ctx = document.getElementById('evolucaoChart').getContext('2d');
+      const diasPassados = 7;
+
+      // Gerar dados de evolução para os dias
+      const dadosEvolucao = Array.from({ length: diasPassados }, (_, i) => Math.floor((i + 1) * totalParticipantes / diasPassados));
+
+      // Calcular a linha de tendência (regressão linear simples)
+      const x = Array.from({ length: diasPassados }, (_, i) => i + 1);
+      const y = dadosEvolucao;
+      const n = x.length;
+
+      const xMean = x.reduce((sum, value) => sum + value, 0) / n;
+      const yMean = y.reduce((sum, value) => sum + value, 0) / n;
+
+      const numerator = x.reduce((sum, xi, i) => sum + (xi - xMean) * (y[i] - yMean), 0);
+      const denominator = x.reduce((sum, xi) => sum + (xi - xMean) ** 2, 0);
+
+      const slope = numerator / denominator;
+      const intercept = yMean - slope * xMean;
+
+      // Gerar dados da linha de tendência
+      const tendencia = x.map(xi => slope * xi + intercept);
+
+      // Adicionar um valor de meta para comparação
+      const meta = totalParticipantes * 0.9; // Exemplo: meta de 90% do total de participantes
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({ length: diasPassados }, (_, i) => `Dia ${i + 1}`),
+          datasets: [{
+            label: 'Participantes Real',
+            data: dadosEvolucao,
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1,
+            fill: false,
+            pointBackgroundColor: 'rgb(75, 192, 192)',
+            pointRadius: 5
+       }, {
+            label: 'Linha de Tendência',
+            data: tendencia,
+            borderColor: 'rgb(255, 99, 132)',
+            tension: 0.1,
+            fill: false,
+            borderDash: [5, 5] // Linha tracejada
+       }, {
+            label: 'Meta',
+            data: Array(diasPassados).fill(meta),
+            borderColor: 'rgb(255, 159, 64)',
+            borderDash: [10, 5], // Linha tracejada
+            fill: false
+       }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Número de Participantes'
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(tooltipItem) {
+                  return `Dia ${tooltipItem.label}: ${tooltipItem.raw} participantes`;
+                }
+              }
+            }
+          },
+          interaction: {
+            mode: 'nearest',
+            intersect: false
+          }
+        }
+      });
+    }
+
+    function updateNomesParticipantesChart() {
+      const ctx = document.getElementById('nomesParticipantesChart').getContext('2d');
+      const projetosComParticipantes = Object.entries(pessoasPorProjeto)
+        .filter(([_, participantes]) => participantes.length > 0)
+        .sort((a, b) => b[1].length - a[1].length);
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: projetosComParticipantes.map(([projeto, _]) => projeto),
+          datasets: [{
+            label: 'Participantes',
+            data: projetosComParticipantes.map(([_, participantes]) => participantes.length),
+            backgroundColor: 'rgba(75, 192, 192, 0.6)'
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const projeto = projetosComParticipantes[context.dataIndex][0];
+                  const participantes = pessoasPorProjeto[projeto];
+                  return participantes.join(', ');
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Número de Participantes'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function showModal(project) {
+      const modal = document.getElementById("projectModal");
+      const modalProjectName = document.getElementById("modalProjectName");
+      const modalProjectImage = document.getElementById("modalProjectImage");
+      const modalProjectDescription = document.getElementById("modalProjectDescription");
+      const modalPeopleList = document.getElementById("modalPeopleList");
+
+      modalProjectName.textContent = project.nome;
+      modalProjectImage.src = project.imagem;
+      modalProjectImage.alt = `Logo ${project.nome}`;
+      modalProjectDescription.textContent = projetoDescricoes[project.nome] || "Descrição não disponível.";
+
+      modalPeopleList.innerHTML = '';
+      const people = pessoasPorProjeto[project.nome] || [];
+
+      if (people.length === 0) {
+        const li = document.createElement("li");
+        li.textContent = "Nenhum membro";
+        modalPeopleList.appendChild(li);
+      } else {
+        people.forEach(person => {
+          const li = document.createElement("li");
+          li.textContent = person;
+          modalPeopleList.appendChild(li);
+        });
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    document.getElementById("closeModal").addEventListener("click", () => {
+      document.getElementById("projectModal").classList.add('hidden');
+    });
+
+    document.getElementById("darkModeToggle").addEventListener("click", () => {
+      document.body.classList.toggle("dark");
+      document.getElementById('themeIcon').style.display = document.body.classList.contains('dark') ? 'none' : 'block';
+      document.getElementById('moonIcon').style.display = document.body.classList.contains('dark') ? 'block' : 'none';
+    });
+
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        document.getElementById('preloader').classList.add('hidden');
+        updateRanking();
+      }, 3000);
+    });
+  </script>
+
+</body>
+
+</html>
